@@ -1,0 +1,29 @@
+=> SOCKET.IO
+
+1. Real time communmication - transfer datas client vs server
+2. Bidirectional - client to server / server to client
+3. Event based - one event both listen
+
+Used for => chat apps, live notifications, online games, live location tracking
+
+----------------------------------------------------------------
+
+=> Install nodemon globally 
+
+npm install -g nodemon
+
+nodemon -v
+
+- package.json
+
+"scripts": {
+    "dev": "nodemon server.js"
+}
+
+npm run dev 
+
+or 
+
+npx nodemon server.js
+
+----------------------------------------------------------------
