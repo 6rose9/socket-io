@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect SocketIO</title>
+</head>
+
+<body>
+    <h1>Hello from SocketIO</h1>
+    <!-- 
+        By default, the Socket.IO server exposes a client bundle at /socket.io/socket.io.js. 
+        io will be registered as a global variable:
+    -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // connect to same origin (http://localhost:3000)
+        const socket = io(); // io(http://localhost:3000)
+
+        console.log(socket);
+
+        socket.on("connect", () => {
+            console.log(`Connect to server, My ID is : ${socket.id}`);
+
+            socket.emit("msgfromClient", {msg: "Hello Server!"});
+        });
+
+        socket.on("msgfromserver", (payload) => {
+            console.log(`Server Data:`, payload);
+        });
+    </script>
+</body>
+
+</html>
