@@ -39,5 +39,26 @@ io.on("connection", (socket) => {
     socket.on("msgfromClient", data => {
         console.log(`Client Message: `, data);
     })
+
+    // ### handle discount
+    socket.on("disconnect", () => {
+        console.log("Client Disconnected: ", socket.id);
+        // socket.emit("userDisconnected", { id: socket.id }); or
+        io.emit("userDisconnected", { id: socket.id });
+    });
+
+    // default event error 
+    socket.on("error", (error) => {
+        console.error(`Socket Error (${socket.id})`, error);
+    });
 });
 
+// graceful shutdown - ctrl + c - sigint
+// close terminal - sighup
+process.on("SIGINT", () => {
+    console.log("SIGINT received. Shutdown server");
+    expressServer.close(() => {
+        console.log("Server closed");
+        process.exit(0);
+    })
+});
