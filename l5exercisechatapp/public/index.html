@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container border p-0">
+        <h3 class="bg-primary text-white p-3">Chat App</h3>
+        <div class="p-3">
+            <!-- <a href="/chat.html">Chat Now</a> -->
+            <!-- http://localhost:3000/chat.html
+             http://localhost:3000/chat -->
+            <a href="/chat">Chat Now</a>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // connect to same origin (http://localhost:3000)
+        const socket = io(); // io(http://localhost:3000)
+
+        console.log(socket);
+
+        socket.on("connect", () => {
+            console.log(`Connect to server, My ID is : ${socket.id}`);
+
+            socket.emit("msgfromClient", { msg: "Hello Server!" });
+        });
+
+        socket.on("msgfromserver", (payload) => {
+            console.log(`Server Data:`, payload);
+        });
+
+        socket.on("reconnect", (attemptNumber) => {
+            console.log("Reconnected : ", attemptNumber);
+        });
+
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>
