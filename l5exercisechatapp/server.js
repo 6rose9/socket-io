@@ -49,6 +49,16 @@ io.on("connection", (socket) => {
         console.log(`Client Message: `, data);
     })
 
+    socket.on("usermessage", (data) => {
+        console.log("Recieve user message:", data);
+
+        // broadcast to all clients including sender
+        socket.emit("notifyAllUsers", {
+            message: data.data,
+            time: new Date().toISOString()
+        });
+    });
+
     // ### handle discount
     socket.on("disconnect", () => {
         console.log("Client Disconnected: ", socket.id);

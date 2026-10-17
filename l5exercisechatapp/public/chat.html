@@ -28,7 +28,7 @@
                 </div>
             </form>
 
-            <ul id="display" class="list-group"></ul>
+            <ul id="displayMessages" class="list-group mt-3"></ul>
         </div>
 
     </div>
@@ -52,6 +52,38 @@
 
         socket.on("reconnect", (attemptNumber) => {
             console.log("Reconnected : ", attemptNumber);
+        });
+
+        // listen messages
+        socket.on("notifyAllUsers", data => {
+            const newli = document.createElement("li");
+            newli.className = "list-group-item d-flex justify-content-between";
+            newli.textContent = data.message;
+
+            const newspan = document.createElement("span");
+            newspan.textContent = data.time;
+            newli.appendChild(newspan);
+
+            document.querySelector("#displayMessages").appendChild(newli);
+        });
+
+        // handle form submit
+        document.querySelector("#messageform").addEventListener("submit", (e) => {
+            e.preventDefault();
+
+            const inputEl = document.querySelector("#usermessage");
+            // console.log("message element",inputEl);
+
+            const usermessage = inputEl.value.trim();
+            if (!usermessage) return;
+
+            console.log("user message:", usermessage);
+
+            // send message to server
+            socket.emit("usermessage", { data: usermessage });
+
+            inputEl.value = "";
+            inputEl.focus();
         });
 
     </script>
