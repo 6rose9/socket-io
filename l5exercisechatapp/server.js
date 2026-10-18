@@ -53,10 +53,13 @@ io.on("connection", (socket) => {
         console.log("Recieve user message:", data);
 
         // broadcast to all clients including sender
-        socket.emit("notifyAllUsers", {
+        io.emit("notifyAllUsers", {
             message: data.data,
             time: new Date().toISOString()
         });
+
+        // server instance emit to all clients
+        // callback parameter object emit to only senders
     });
 
     // ### handle discount
