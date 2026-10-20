@@ -35,6 +35,11 @@ io.on("connection", (socket) => {
 
     socket.emit("welcome", { ns: "/", message: "welcome to default namespace" });
 
+    socket.on("defautns", (payload) => {
+        console.log("Client Message", payload);
+        io.emit("broadcast", payload);
+    });
+
     // ### handle discount
     socket.on("disconnect", () => {
         console.log("Client Disconnected: ", socket.id);
