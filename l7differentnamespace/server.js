@@ -19,7 +19,7 @@ app.get('/', (_req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// ### chat page route
+// ### admin page route
 app.get('/admin', (_req, res) => {
     res.sendFile(path.join(__dirname, "public", "admin.html"));
 })
@@ -38,9 +38,9 @@ const io = new Server(expressServer, {
     }
 })
 
-// ### connect socket.io using connection event
+// ### default namespace
 io.on("connection", (socket) => {
-    console.log(`New client connected: ${socket.id}`);
+    console.log(`New client connected to / : ${socket.id}`);
 
     socket.emit("welcome", { ns: "/", message: "welcome to default namespace" });
 
@@ -48,17 +48,19 @@ io.on("connection", (socket) => {
         console.log("Client Message", payload);
         io.emit("broadcast", payload);
     });
+});
 
-    // ### handle discount
-    socket.on("disconnect", () => {
-        console.log("Client Disconnected: ", socket.id);
-        // socket.emit("userDisconnected", { id: socket.id }); or
-        io.emit("userDisconnected", { id: socket.id });
-    });
+// ### custom namespace "/admin"
+const adminNs = io.of("/admin");
+adminNs.on("connection", (socket) => {
+    console.log(`New client connected to /admin : ${socket.id}`);
 
-    // default event error 
-    socket.on("error", (error) => {
-        console.error(`Socket Error (${socket.id})`, error);
+    socket.emit("welcome", { ns: "/admin", message: "welcome to admin namespace" });
+
+    socket.on("adminns", (payload) => {
+        console.log("Client Message", payload);
+        // adminNs.emit("broadcast-admin", payload);
+        socket.emit("broadcast-admin", payload);
     });
 });
 

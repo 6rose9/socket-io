@@ -34,10 +34,8 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        // connect to same origin (http://localhost:3000)
-        const socket = io(); // io(http://localhost:3000)
 
-        console.log(socket);
+        const socket = io("/admin");
 
         const newli = (message) => {
             const li = document.createElement("li");
@@ -46,7 +44,7 @@
         }
 
         socket.on("connect", () => {
-            console.log(`Connect to server, My ID is : ${socket.id}`);
+            console.log(`Connect to server with /admin, My ID is : ${socket.id}`);
         });
 
         socket.on("welcome", (payload) => {
@@ -67,13 +65,13 @@
 
             console.log(messageVal);
 
-            socket.emit("defautns", {
-                ns: "/",
+            socket.emit("adminns", {
+                ns: "/admin",
                 text: messageVal
             });
         });
 
-        socket.on("broadcast", payload => {
+        socket.on("broadcast-admin", payload => {
             newli(`${payload.ns} = ${payload.text}`);
         });
 
