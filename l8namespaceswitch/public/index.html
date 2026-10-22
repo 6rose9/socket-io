@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Namespace</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container border p-0">
+        <h3 class="bg-primary text-white p-3">Socket.IO Namespaces "/ " </h3>
+        <div class="p-3">
+            <p>
+                <a href="/" class="btn border-bottom active">Home Page</a>
+                <a href="/admin" class="btn border-bottom">Admin Page</a>
+            </p>
+            <form action="" id="messageform" class="mt-3">
+                <div class="row">
+                    <div class="col-sm-6 mt-3">
+                        <input type="text" name="usermessage" id="usermessage" class="form-control"
+                            placeholder="Enter your message">
+                    </div>
+                    <div class="col-sm-2 mt-3">
+                        <input type="submit" class="w-100 btn btn-success" value="Send">
+                    </div>
+                </div>
+            </form>
+
+            <ul id="messages" class="mt-3"></ul>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // connect to same origin (http://localhost:3000)
+        const socket = io(); // io(http://localhost:3000)
+
+        console.log(socket);
+
+        const newli = (message) => {
+            const li = document.createElement("li");
+            li.textContent = message;
+            document.getElementById("messages").appendChild(li);
+        }
+
+        socket.on("connect", () => {
+            console.log(`Connect to server, My ID is : ${socket.id}`);
+        });
+
+        socket.on("welcome", (payload) => {
+            newli(`Welcome event from ${payload.ns} : ${payload.message}`);
+        });
+
+        // handle submit
+        document.querySelector("#messageform")?.addEventListener("submit", (e) => {
+
+            e.preventDefault(); // don't reload page, don't send data to server
+
+            const inputEl = document.querySelector("#usermessage");
+            const messageVal = inputEl.value.trim();
+
+            console.log(typeof messageVal);
+
+            if (!messageVal) return;
+
+            console.log(messageVal);
+
+            socket.emit("defautns", {
+                ns: "/",
+                text: messageVal
+            });
+        });
+
+        socket.on("broadcast", payload => {
+            newli(`${payload.ns} = ${payload.text}`);
+        });
+
+        socket.on("reconnect", (attemptNumber) => {
+            console.log("Reconnected : ", attemptNumber);
+        });
+
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>
