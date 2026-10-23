@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
 import express from "express";
-import path from "path";
+import path, { dirname } from "path";
 import { fileURLToPath } from "url";
 import { namespaces } from "./data/namespace.js";
 
@@ -25,10 +25,17 @@ app.get('/admin', (_req, res) => {
     res.sendFile(path.join(__dirname, "public", "admin.html"));
 })
 
+// ### namespaces route
+app.get("/ns", (_req, res) => {
+    res.sendFile(path.join(__dirname, "public", "ns.html"));
+})
+
 // ### start express server
 const expressServer = app.listen(port, () => {
     console.log(`Server listening on http://localhost:${port}`);
 });
+
+//------------------------------------------------------------------------------------
 
 // ### initialize socket.io after express server listen
 // const io = new Server(expressServer);
@@ -44,10 +51,24 @@ io.on("connection", (socket) => {
     console.log(`New client connected to / : ${socket.id}`);
 
     socket.emit("welcome", { ns: "/", message: "welcome to default namespace" });
+    socket.emit("nsList", namespaces);
 
     socket.on("defautns", (payload) => {
         console.log("Client Message", payload);
         io.emit("broadcast", payload);
+    });
+});
+
+// ### custom namespace "/admin"
+const adminNs = io.of("/admin");
+adminNs.on("connection", (socket) => {
+    console.log(`New client connected to /admin : ${socket.id}`);
+
+    socket.emit("welcome", { ns: "/admin", message: "welcome to admin namespace" });
+
+    socket.on("adminns", (payload) => {
+        console.log("Client Message", payload);
+        adminNs.emit("broadcast-admin", payload);
     });
 });
 
@@ -60,7 +81,7 @@ namespaces.forEach(ns => {
         // send welcome message to clients
         thisNs.emit("welcome", {
             ns: ns.endpoint,
-            msg: `Welcome to ${ns.endpoint}${ns.name} namespace: ${socket.id}`
+            msg: `Welcome event from ${ns.endpoint}: client _ ${socket.id}`
         });
     });
 });
