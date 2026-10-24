@@ -68,6 +68,7 @@
 
         rootSocket.on("nsList", (nsData) => {
             const btncontainerEl = document.querySelector("#btn-container");
+            btncontainerEl.innerHTML = "";
             nsData.forEach(data => {
                 const btnEl = document.createElement("button");
                 btnEl.textContent = data.name ?? "button";
@@ -93,16 +94,15 @@
             const inputEl = document.querySelector("#usermessage");
             const messageVal = inputEl.value.trim();
 
-            console.log(typeof messageVal);
-
             if (!messageVal) return;
 
-            console.log(messageVal);
-
-            socket.emit("defautns", {
-                ns: "/",
+            currentSocket?.emit("currentNs", {
+                ns: currentNamespace,
                 text: messageVal
             });
+
+            inputEl.value = "";
+            inputEl.focus();
         });
 
 
@@ -113,6 +113,11 @@
 
         // helpers
         function switchNamespace(endpoint) {
+
+            if(currentSocket) {
+                currentSocket.close();
+            }
+
             document.querySelector("#current-ns").textContent = `Current Namespace:  ${endpoint}`;
 
             // create socket for namespace
@@ -126,6 +131,10 @@
             // listen from server
             currentSocket.on("welcome", (payload) => {
                 newli(payload.msg);
+            });
+
+            currentSocket.on("broadcastNsMessage", (payload) => {
+                newli(`${payload.ns} = ${payload.text} (by ${payload.sender})`);
             });
 
         }

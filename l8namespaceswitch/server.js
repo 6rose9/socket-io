@@ -74,14 +74,28 @@ adminNs.on("connection", (socket) => {
 
 // ### switch namespaces
 namespaces.forEach(ns => {
+    
     const thisNs = io.of(ns.endpoint);
-    thisNs.on("connection", socket => {
-        console.log(`Connected to ${ns.endpoint} : ${socket.id}`);
+
+    thisNs.on("connection", currentSocket => {
+        console.log(`Connected to ${ns.endpoint} : ${currentSocket.id}`);
 
         // send welcome message to clients
         thisNs.emit("welcome", {
             ns: ns.endpoint,
-            msg: `Welcome event from ${ns.endpoint}: client _ ${socket.id}`
+            msg: `Welcome event from ${ns.endpoint}: client _ ${currentSocket.id}`
+        });
+
+        // receive from switched namespace
+        currentSocket.on("currentNs", payload => {
+            console.log(`${payload.ns} sends message: ${payload.text}`);
+
+            // send message to all clients in the namespace
+            thisNs.emit("broadcastNsMessage", {
+                ns: ns.endpoint,
+                text: payload.text,
+                sender: currentSocket.id
+            });
         });
     });
 });
