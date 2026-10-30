@@ -36,13 +36,28 @@ const io = new Server(expressServer, {
 
 // ### default namespace
 io.on("connection", (socket) => {
+
+    console.log("Before join room", socket.rooms);
+
     // handle client request to join a room
     socket.on('joinroom', (room) => {
         if (room) {
+
+            // leave all previous room except it's own room ( every socket has it socket.id room)
+            for (const r of socket.rooms) {
+                if (r !== socket.id) socket.leave(r);
+            }
+
+            console.log("Leave rooms...");
+
             socket.join(room);
             // notify client of successful join
             socket.emit('joined', `Selected Room: ${room}`);
             console.log(`Socket ${socket.id} joined ${room}`);
+
+            console.log("After join room", socket.rooms);
         }
     });
+
+    console.log("---------------------------------------------------");
 });
