@@ -70,11 +70,32 @@
             socket.emit("joinroom", selectRoomVal);
         });
 
+        document.getElementById("messageform")?.addEventListener("submit", event => {
+            event.preventDefault();
+
+            const usermessageEl = document.querySelector("#usermessage");
+            let message = usermessageEl.value.trim();
+
+            if (!message) return;
+
+            // send to server
+            socket.emit("usermessage", message);
+
+            usermessageEl.value = "";
+            usermessageEl.focus();
+        });
+
+        // listen to server
         socket.on("joined", msg => {
-            const selectedRoomP = document.getElementById("selected-room");
-            if (selectedRoomP) {
-                selectedRoomP.textContent = msg;
+            const selectedRoomEl = document.getElementById("selected-room");
+            if (selectedRoomEl) {
+                selectedRoomEl.textContent = msg;
+                console.log("Joined room:", msg);
             }
+        });
+
+        socket.on("roommessage", (payload) => {
+            newli(`${payload.sender} send "${payload.message}" to ${payload.room} at ${new Date(payload.date)}`);
         });
 
     </script>

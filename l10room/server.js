@@ -48,7 +48,7 @@ io.on("connection", (socket) => {
                 if (r !== socket.id) socket.leave(r);
             }
 
-            console.log("Leave rooms...");
+            console.log(`${socket.id} leaved rooms...`);
 
             socket.join(room);
             // notify client of successful join
@@ -56,8 +56,24 @@ io.on("connection", (socket) => {
             console.log(`Socket ${socket.id} joined ${room}`);
 
             console.log("After join room", socket.rooms);
+
+            console.log("---------------------------------------------------");
         }
     });
 
-    console.log("---------------------------------------------------");
+    socket.on("usermessage", (payload) => {
+        console.log("user room", socket.rooms, "user message", payload);
+
+        // send message to user's room
+        // const userrooms = [...socket.rooms];
+        // const userrooms = Array.from(socket.rooms);
+        const [socketid, userroom] = [...socket.rooms];
+
+        socket.to(userroom).emit("roommessage", {
+            "message" : payload,
+            "sender" : socketid,
+            "room": userroom,
+            "date": Date.now()
+        });
+    });
 });
