@@ -36,7 +36,7 @@ const io = new Server(expressServer, {
 
 // ### default namespace
 io.on("connection", (socket) => {
-
+   // Method 1
     console.log("Before join room", socket.rooms);
 
     // handle client request to join a room

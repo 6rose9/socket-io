@@ -1,7 +1,7 @@
 {
-  "name": "fetch socket",
+  "name": "socket rooms",
   "version": "1.0.0",
-  "description": "count how many members join the room",
+  "description": "count how many members join the room using fetchSockets()",
   "license": "ISC",
   "author": "",
   "type": "module",
