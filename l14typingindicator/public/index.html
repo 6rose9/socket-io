@@ -34,12 +34,12 @@
                             placeholder="Enter your message">
                     </div>
                     <div class="col-sm-2 mt-3">
-                        <input type="submit" class="w-100 btn btn-success" value="Send Message">
+                        <input type="submit" class="w-100 btn btn-success" value="Send">
                     </div>
                 </div>
             </form>
 
-            <p id="typingstatus" class="text-muted"></p>
+            <p id="typingstatus" class="text-muted mt-3"></p>
 
             <ul id="messages" class="list-group mt-3"></ul>
         </div>
@@ -49,6 +49,9 @@
     <script>
 
         const socket = io();
+        const typingstatusEl = document.querySelector("#typingstatus");
+        let selectRoomVal;
+        let timeout = null;
 
         const newli = (message) => {
             const li = document.createElement("li");
@@ -56,7 +59,7 @@
             document.getElementById("messages").appendChild(li);
         }
 
-        const callback = (roomname, count) => {
+        const livecountCallback = (roomname, count) => {
             document.querySelector('#member-count').textContent = `Number of member: ${count}`;
         }
 
@@ -70,11 +73,17 @@
             e.preventDefault(); // don't reload page, don't send data to server
 
             const selectRoomEl = document.querySelector("#selectroom");
-            const selectRoomVal = selectRoomEl.value.trim();
+            const room = selectRoomEl.value.trim();
 
-            if (!selectRoomVal) return;
+            if (!room) return;
 
-            socket.emit("joinroom", selectRoomVal, callback);
+            if (timeout) {
+                clearTimeout(timeout);
+                timeout = null;
+            }
+
+            socket.emit("joinroom", room, livecountCallback);
+            selectRoomVal = room;
         });
 
         document.getElementById("messageform")?.addEventListener("submit", event => {
@@ -92,6 +101,23 @@
             usermessageEl.focus();
         });
 
+        document.querySelector("#usermessage").addEventListener("input", e => {
+
+            if (!selectRoomVal || !e.target.value.trim()) return;
+
+            if (timeout) clearTimeout(timeout);
+
+            const room = selectRoomVal;
+            socket.emit("client-start-typing", {
+                room
+            });
+
+            timeout = setTimeout(() => {
+                socket.emit("client-stop-typing", { room });
+                timeout = null;
+            }, 3000);
+        });
+
         // listen to server
         socket.on("joined", msg => {
             const selectedRoomEl = document.getElementById("selected-room");
@@ -107,7 +133,13 @@
 
         socket.on("livecount", (payload) => {
             console.log("livecount", payload);
-            callback(payload.room, payload.count);
+            livecountCallback(payload.room, payload.count);
+        });
+
+        socket.on("server-typing-status", typingSockets => {
+            typingstatusEl.textContent = typingSockets.length
+                ? `${typingSockets.join(", ")} is typing...`
+                : null;
         });
 
     </script>

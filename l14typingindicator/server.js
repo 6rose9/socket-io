@@ -34,6 +34,19 @@ const io = new Server(expressServer, {
     }
 });
 
+const typingSocketsByRoom = new Map();
+
+function emitTypingStatus(room) {
+    const typingSockets = typingSocketsByRoom.get(room) ?? new Set();
+    io.to(room).emit("server-typing-status", [...typingSockets]);
+    if (typingSockets.size === 0) typingSocketsByRoom.delete(room);
+}
+
+function stopTyping(socket, room) {
+    const typingSockets = typingSocketsByRoom.get(room);
+    if (typingSockets?.delete(socket.id)) emitTypingStatus(room);
+}
+
 // ### helper function
 async function emitUserLiveCount(room) {
     const sockets = await io.in(room).fetchSockets();
@@ -56,13 +69,17 @@ io.on("connection", (socket) => {
 
             // leave all previous room except it's own room ( every socket has it socket.id room)
             for (const r of socket.rooms) {
-                if (r !== socket.id) socket.leave(r);
+                if (r !== socket.id) {
+                    stopTyping(socket, r);
+                    socket.leave(r);
+                }
                 await emitUserLiveCount(r); // notify for leaved room
             }
 
             console.log(`${socket.id} leaved rooms...`);
 
             socket.join(room);
+            emitTypingStatus(room);
             // notify client of successful join
             socket.emit('joined', `Selected Room: ${room}`);
             console.log(`Socket ${socket.id} joined ${room}`);
@@ -79,6 +96,30 @@ io.on("connection", (socket) => {
             console.log("Joined Members count: ", count);
 
             callback(room, count);
+        }
+    });
+
+    // handle client typing indicator
+    socket.on("client-start-typing", payload => {
+        if (typeof payload?.room !== "string" || !socket.rooms.has(payload.room)) return;
+
+        let typingSockets = typingSocketsByRoom.get(payload.room);
+        if (!typingSockets) {
+            typingSockets = new Set();
+            console.log("new set()", typingSockets);
+            typingSocketsByRoom.set(payload.room, typingSockets);
+        }
+        typingSockets.add(socket.id);
+        emitTypingStatus(payload.room);
+    });
+
+    socket.on("client-stop-typing", payload => {
+        if (typeof payload?.room === "string") stopTyping(socket, payload.room);
+    });
+
+    socket.on("disconnecting", () => {
+        for (const room of socket.rooms) {
+            if (room !== socket.id) stopTyping(socket, room);
         }
     });
 
