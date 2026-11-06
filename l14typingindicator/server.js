@@ -35,10 +35,15 @@ const io = new Server(expressServer, {
 });
 
 const typingSocketsByRoom = new Map();
+console.log("typing socket by room: ", typingSocketsByRoom); //  Map(0) {}
 
 function emitTypingStatus(room) {
     const typingSockets = typingSocketsByRoom.get(room) ?? new Set();
     io.to(room).emit("server-typing-status", [...typingSockets]);
+    console.log("typing socket by room", typingSocketsByRoom); 
+//      Map(1) {
+//          'room-a' => Set(2) { 'zubt_AWxYra1lTM5AAAF', 'MscLSfyw8SYkevo2AAAE' }
+//      }
     if (typingSockets.size === 0) typingSocketsByRoom.delete(room);
 }
 
@@ -54,14 +59,14 @@ async function emitUserLiveCount(room) {
         count: sockets.length,
         room
     };
-    console.log("livecount", data);
+    console.log("livecount: ", data);
     io.to(room).emit("livecount", data);
 }
 
 // ### default namespace
 io.on("connection", (socket) => {
     // Method 1
-    console.log("Before join room", socket.rooms);
+    console.log("Before join room: ", socket.rooms);
 
     // handle client request to join a room
     socket.on('joinroom', async (room, callback) => {
@@ -84,7 +89,7 @@ io.on("connection", (socket) => {
             socket.emit('joined', `Selected Room: ${room}`);
             console.log(`Socket ${socket.id} joined ${room}`);
 
-            console.log("After join room", socket.rooms);
+            console.log("After join room: ", socket.rooms);
             await emitUserLiveCount(room);
 
             console.log("---------------------------------------------------");
@@ -106,7 +111,7 @@ io.on("connection", (socket) => {
         let typingSockets = typingSocketsByRoom.get(payload.room);
         if (!typingSockets) {
             typingSockets = new Set();
-            console.log("new set()", typingSockets);
+            console.log("typing socket - new set(): ", typingSockets);
             typingSocketsByRoom.set(payload.room, typingSockets);
         }
         typingSockets.add(socket.id);
@@ -124,7 +129,7 @@ io.on("connection", (socket) => {
     });
 
     socket.on("usermessage", (payload) => {
-        console.log("user room", socket.rooms, "user message", payload);
+        console.log("user room: ", socket.rooms, "user message: ", payload);
 
         // send message to user's room
         // const userrooms = [...socket.rooms];
