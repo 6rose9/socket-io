@@ -73,29 +73,38 @@
     <script>
 
         const socket = io();
-        const typingstatusEl = document.querySelector("#typingstatus");
+        const typingStatusEl = document.querySelector("#typingstatus");
+        const messageBoxEl = document.getElementById("messages");
+        const memberCountEl = document.querySelector('#member-count');
+        const selectRoomCountEl =  document.querySelector("#selected-room");
+        const selectRoomButtom = document.querySelector("#selectroom-btn");
+        const messageForm = document.getElementById("messageform");
+        const userMessageInput = document.querySelector("#usermessage");
+        
         let selectRoomVal;
         let timeout = null;
 
         const newli = (message) => {
             const li = document.createElement("li");
             li.textContent = message;
-            document.getElementById("messages").appendChild(li);
+            messageBoxEl.appendChild(li);
+            li.className = "list-group-item";
+            li.scrollTop = messageBoxEl.scrollHeight;
         }
 
         const livecountCallback = (roomname, count) => {
-            document.querySelector('#member-count').textContent = `Number of member: ${count}`;
+            memberCountEl.textContent = `Number of member: ${count}`;
         }
 
         socket.on("connect", () => {
             console.log(`Connect to server, My ID is : ${socket.id}`);
             selectRoomVal = socket.id;
-            document.querySelector("#selected-room").textContent = "Selected Room: My Notes";
-            document.querySelector("#member-count").textContent = "Number of member: 1";
+            selectRoomCountEl.textContent = "Selected Room: My Notes";
+            memberCountEl.textContent = "Number of member: 1";
         });
 
         // handle submit
-        document.querySelector("#selectroom-btn")?.addEventListener("click", (e) => {
+        selectRoomButtom?.addEventListener("click", (e) => {
 
             e.preventDefault(); // don't reload page, don't send data to server
 
@@ -114,7 +123,7 @@
             selectRoomVal = targetRoom;
         });
 
-        document.getElementById("messageform")?.addEventListener("submit", event => {
+        messageForm?.addEventListener("submit", event => {
             event.preventDefault();
 
             const usermessageEl = document.querySelector("#usermessage");
@@ -129,7 +138,7 @@
             usermessageEl.focus();
         });
 
-        document.querySelector("#usermessage").addEventListener("input", e => {
+        userMessageInput.addEventListener("input", e => {
 
             if (!selectRoomVal || !e.target.value.trim()) return;
 
@@ -165,7 +174,7 @@
         });
 
         socket.on("server-typing-status", typingSockets => {
-            typingstatusEl.textContent = typingSockets.length
+            typingStatusEl.textContent = typingSockets.length
                 ? `${typingSockets.join(", ")} is typing...`
                 : null;
         });
