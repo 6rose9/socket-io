@@ -24,7 +24,7 @@
             <div class="col col-md-6">
                 <div class="input-group">
                     <input type="text" name="name" id="name" class="form-control" />
-                    <button type="button" class="btn btn-success">Save</button>
+                    <button type="button" id="save-profile" class="btn btn-success">Save</button>
                 </div>
             </div>
             <div class="col col-md-6 d-flex gap-2">
@@ -73,14 +73,16 @@
     <script>
 
         const socket = io();
+        const usernameEl = document.getElementById("name");
+        const saveProfileButtom = document.getElementById("save-profile");
         const typingStatusEl = document.querySelector("#typingstatus");
         const messageBoxEl = document.getElementById("messages");
         const memberCountEl = document.querySelector('#member-count');
-        const selectRoomCountEl =  document.querySelector("#selected-room");
+        const selectRoomCountEl = document.querySelector("#selected-room");
         const selectRoomButtom = document.querySelector("#selectroom-btn");
         const messageForm = document.getElementById("messageform");
         const userMessageInput = document.querySelector("#usermessage");
-        
+
         let selectRoomVal;
         let timeout = null;
 
@@ -104,6 +106,12 @@
         });
 
         // handle submit
+        saveProfileButtom?.addEventListener("click", () => {
+            socket.emit("save-profile", usernameEl.value.trim(), savedName => {
+                document.getElementById("username").textContent = `User Name: ${savedName}`;
+            });
+        });
+
         selectRoomButtom?.addEventListener("click", (e) => {
 
             e.preventDefault(); // don't reload page, don't send data to server
