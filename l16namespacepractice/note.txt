@@ -1,0 +1,34 @@
+=> Documentation
+
+https://socket.io/docs/v4/
+
+
+=> Installation
+
+https://socket.io/docs/v4/server-installation/
+
+
+=> Create Project
+
+create public folder
+create public > index.html
+create server.js
+
+npm init 
+
+npm install socket.io express
+
+=> Run
+
+node server.js (need to server reset after something change to update)
+
+or
+
+nodemon server.js (auto reset)
+
+----------------------------------------------------------------------
+
+=> package.json
+
+type: module
+

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch Sockets</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .box {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            margin: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container border p-0 d-flex flex-column vh-100">
+        <h3 class="bg-primary text-white p-3">Socket IO Room Practice</h3>
+
+        <div class="row p-2">
+            <div class="col col-md-6">
+                <div class="input-group">
+                    <input type="text" name="name" id="name" class="form-control" />
+                    <button type="button" id="save-profile" class="btn btn-success">Save</button>
+                </div>
+            </div>
+            <div class="col col-md-6 d-flex gap-2">
+                <div class="input-group">
+                    <select id="selectroom" class="form-select">
+                        <option value="my-notes" selected>My Notes</option>
+                        <option value="room-a">Room A</option>
+                        <option value="room-b">Room B</option>
+                    </select>
+                    <button id="selectroom-btn" class="btn btn-warning no-wrap">Join Room</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <p id="username" class="m-2">User Name: (none)</p>
+            <p id="selected-room" class="m-2">Selected Room: (none)</p>
+            <p id="member-count" class="m-2">Number of member: 0</p>
+        </div>
+
+        <div class="box">
+            <ul id="messages" class="list-group"></ul>
+        </div>
+
+        <hr />
+
+        <div class="p-2 pt-0">
+            <form action="" id="messageform" class="">
+                <div class="row g-2">
+                    <div class="col-sm-4 mt-3">
+                        <input type="text" name="usermessage" id="usermessage" class="form-control"
+                            placeholder="Enter your message">
+                    </div>
+                    <div class="col-sm-2 mt-3">
+                        <input type="submit" class="w-100 btn btn-primary" value="Send">
+                    </div>
+                </div>
+            </form>
+
+            <p id="typingstatus" class="text-muted mt-3"></p>
+
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+
+        const socket = io();
+        const usernameEl = document.getElementById("name");
+        const saveProfileButtom = document.getElementById("save-profile");
+        const typingStatusEl = document.querySelector("#typingstatus");
+        const messageBoxEl = document.getElementById("messages");
+        const memberCountEl = document.querySelector('#member-count');
+        const selectRoomCountEl = document.querySelector("#selected-room");
+        const selectRoomButtom = document.querySelector("#selectroom-btn");
+        const messageForm = document.getElementById("messageform");
+        const userMessageInput = document.querySelector("#usermessage");
+
+        let selectRoomVal;
+        let timeout = null;
+
+        const newli = (message) => {
+            const li = document.createElement("li");
+            li.textContent = message;
+            messageBoxEl.appendChild(li);
+            li.className = "list-group-item";
+            li.scrollTop = messageBoxEl.scrollHeight;
+        }
+
+        const livecountCallback = (roomname, count) => {
+            memberCountEl.textContent = `Number of member: ${count}`;
+        }
+
+        socket.on("connect", () => {
+            console.log(`Connect to server, My ID is : ${socket.id}`);
+            selectRoomVal = socket.id;
+            selectRoomCountEl.textContent = "Selected Room: My Notes";
+            memberCountEl.textContent = "Number of member: 1";
+        });
+
+        // handle submit
+        saveProfileButtom?.addEventListener("click", () => {
+            socket.emit("save-profile", usernameEl.value.trim(), savedName => {
+                document.getElementById("username").textContent = `User Name: ${savedName}`;
+            });
+        });
+
+        selectRoomButtom?.addEventListener("click", (e) => {
+
+            e.preventDefault(); // don't reload page, don't send data to server
+
+            const selectRoomEl = document.querySelector("#selectroom");
+            const room = selectRoomEl.value.trim();
+
+            if (!room) return;
+            const targetRoom = room === "my-notes" ? socket.id : room;
+
+            if (timeout) {
+                clearTimeout(timeout);
+                timeout = null;
+            }
+
+            socket.emit("joinroom", room, livecountCallback);
+            selectRoomVal = targetRoom;
+        });
+
+        messageForm?.addEventListener("submit", event => {
+            event.preventDefault();
+
+            const usermessageEl = document.querySelector("#usermessage");
+            let message = usermessageEl.value.trim();
+
+            if (!message) return;
+
+            // send to server
+            socket.emit("usermessage", message);
+
+            usermessageEl.value = "";
+            usermessageEl.focus();
+        });
+
+        userMessageInput.addEventListener("input", e => {
+
+            if (!selectRoomVal || !e.target.value.trim()) return;
+
+            if (timeout) clearTimeout(timeout);
+
+            const room = selectRoomVal;
+            socket.emit("client-start-typing", {
+                room
+            });
+
+            timeout = setTimeout(() => {
+                socket.emit("client-stop-typing", { room });
+                timeout = null;
+            }, 3000);
+        });
+
+        // listen to server
+        socket.on("joined", msg => {
+            const selectedRoomEl = document.getElementById("selected-room");
+            if (selectedRoomEl) {
+                selectedRoomEl.textContent = msg;
+                console.log("Joined room:", msg);
+            }
+        });
+
+        socket.on("roommessage", (payload) => {
+            newli(`${payload.sender} send "${payload.message}" to ${payload.room} at ${new Date(payload.date)}`);
+        });
+
+        socket.on("livecount", (payload) => {
+            console.log("livecount", payload);
+            livecountCallback(payload.room, payload.count);
+        });
+
+        socket.on("server-typing-status", typingSockets => {
+            typingStatusEl.textContent = typingSockets.length
+                ? `${typingSockets.join(", ")} is typing...`
+                : null;
+        });
+
+    </script>
+</body>
+
+</html>
